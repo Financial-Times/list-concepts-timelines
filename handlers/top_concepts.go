@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"html/template"
 	"net/http"
 
+	"encoding/json"
 	"github.com/Financial-Times/list-concepts-timelines/stats"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -17,6 +17,7 @@ func NewTopConceptsHandler() *TopConceptsHandler {
 }
 
 func (h *TopConceptsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.WithField("url", r.URL).Info("http request")
 	values := r.URL.Query()
 	startString := ""
 	if len(values["start"]) > 0 {
@@ -38,11 +39,15 @@ func (h *TopConceptsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		stop = time.Now()
 	}
 
-	topConcepts := stats.NewTopConcepts(start, stop)
-
-	t, err := template.ParseFiles("templates/topConcepts.html")
-	if err != nil {
-		log.WithError(err).Error("Error in parsing concept template")
+	listUUID := ""
+	if len(values["listUUID"]) > 0 {
+		listUUID = values["listUUID"][0]
 	}
-	t.Execute(w, topConcepts)
+	if listUUID == "" {
+		listUUID = "520ddb76-e43d-11e4-9e89-00144feab7de"
+	}
+
+	topConcepts := stats.GetTopConcepts(start, stop, listUUID)
+
+	json.NewEncoder(w).Encode(topConcepts.GetTimeLine())
 }

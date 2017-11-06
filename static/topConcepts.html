@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="../../favicon.ico">
+
+  <title>List concepts stats</title>
+
+    <!-- Include Required Prerequisites -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <!-- Include Date Range Picker -->
+    <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+    <!-- date range picker-->
+    <script type="text/javascript">
+
+
+        $(function() {
+            var start = moment().subtract(1, 'days');
+            var end = moment();
+            function cb(start, end) {
+                $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                drawBarChart(start, end);
+            }
+
+            $('#reportrange').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                }
+            }, cb);
+
+            cb(start, end);
+        });
+    </script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        function drawBarChart(start, end) {
+            google.charts.load('current', {packages: ['corechart', 'bar']});
+
+            google.charts.setOnLoadCallback(function () {
+
+                $.ajax({
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD'),
+                    dataType: "json",
+                    async: true
+                }).done(function(respdata){
+                    var data = new google.visualization.DataTable(respdata);
+                    //console.log(data);
+                    var chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
+
+                    var options = {
+                        height: 500
+                    };
+
+                    chart.draw(data, options);
+                })
+
+            })
+        }
+    </script>
+</head>
+
+</head>
+
+
+  <body>
+  <div class="container theme-showcase" role="main">
+      <div class="jumbotron">
+          <h1>Top Concepts</h1>
+          <p>Top concepts for a specific list in a time period</p>
+      </div>
+      <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+          <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+          <span></span> <b class="caret"></b>
+      </div>
+
+      <div class="form-group">
+          <label for="sel1">Select a list:</label>
+          <select class="form-control" id="sel1">
+              <option value="520ddb76-e43d-11e4-9e89-00144feab7de">UK Top Stories</option>
+              <option value="73667f46-1a55-11e5-a130-2e7db721f996">Highlights</option>
+          </select>
+      </div>
+
+      <div/>
+      <div class="page-header">
+          <h1>Top 10 concepts</h1>
+          <div id="bar_chart"></div>
+      </div>
+  </div>
+
+  </body>
+</html>

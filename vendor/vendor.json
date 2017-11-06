@@ -15,6 +15,24 @@
 			"revisionTime": "2017-10-08T21:49:13Z"
 		},
 		{
+			"checksumSHA1": "X9LZfW+x2udalPpPt2G7CDgUJ8Q=",
+			"path": "github.com/jawher/mow.cli",
+			"revision": "89bd73e5017374498afb615659500c3559ff42b3",
+			"revisionTime": "2017-09-24T10:56:05Z"
+		},
+		{
+			"checksumSHA1": "3HVfwgLpCDH8JX211UWdrSi/GU4=",
+			"path": "github.com/lib/pq",
+			"revision": "b609790bd85edf8e9ab7e0f8912750a786177bcf",
+			"revisionTime": "2017-10-22T19:20:43Z"
+		},
+		{
+			"checksumSHA1": "AU3fA8Sm33Vj9PBoRPSeYfxLRuE=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "b609790bd85edf8e9ab7e0f8912750a786177bcf",
+			"revisionTime": "2017-10-22T19:20:43Z"
+		},
+		{
 			"checksumSHA1": "BYvROBsiyAXK4sq6yhDe8RgT4LM=",
 			"path": "github.com/sirupsen/logrus",
 			"revision": "89742aefa4b206dcf400792f3bd35b542998eb3b",
