@@ -53,7 +53,7 @@ func (h *TopConceptsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		conceptType = values["conceptType"][0]
 	}
 	if conceptType == "" {
-		conceptType = "global"
+		conceptType = "concepts"
 	}
 	topConcepts := stats.GetTopConcepts(start, stop, listUUID)
 

@@ -89,14 +89,14 @@ func (tc *TopConcepts) addConceptEntry(conceptUUID string, conceptPrefLabel stri
 		Total:     n,
 	}
 
-	if conceptType != "SUBJECT" && conceptType != "GENRE" {
-		conceptList, found := tc.Concepts["global"]
+	if conceptType == "ORGANISATION" || conceptType == "PERSON" || conceptType == "LOCATION" || conceptType == "TOPIC" {
+		conceptList, found := tc.Concepts["concepts"]
 		if !found {
 			conceptList = []*Concept{}
 
 		}
 		conceptList = append(conceptList, c)
-		tc.Concepts["global"] = conceptList
+		tc.Concepts["concepts"] = conceptList
 	}
 
 	conceptList, found := tc.Concepts[conceptType]
