@@ -2,17 +2,19 @@ package stats
 
 import (
 	log "github.com/sirupsen/logrus"
-	"sort"
+	"sync"
 	"time"
 )
 
 const DateLayout = "2006-01-02"
 
+var mutex = &sync.Mutex{}
+
 type TopConcepts struct {
 	Start    time.Time
 	Stop     time.Time
 	ListUUID string
-	Concepts map[string]*Concept
+	Concepts map[string][]*Concept
 }
 
 type Concept struct {
@@ -22,6 +24,8 @@ type Concept struct {
 }
 
 func GetTopConcepts(start time.Time, stop time.Time, listUUID string) *TopConcepts {
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	tc, found := cache.get(start, stop, listUUID)
 	if found {
@@ -41,94 +45,87 @@ func GetTopConcepts(start time.Time, stop time.Time, listUUID string) *TopConcep
 func (tc *TopConcepts) init() {
 	log.Info("Getting data...")
 	rows, err := db.Query(
-		"SELECT annotations_cdc.id,annotations_cdc.pref_label,annotations_cdc.type,l.entry_timestamp,l.exit_timestamp FROM "+
-			"(SELECT content_id,entry_timestamp,exit_timestamp FROM ftarticlesdb.content_list_cdc WHERE list_id=$1 AND entry_timestamp>=$2 AND entry_timestamp<=$3) as l "+
+		"SELECT count(articles_v2_cdc.article_uuid) as n, annotations_cdc.id, annotations_cdc.pref_label, annotations_cdc.type FROM "+
+			"(SELECT DISTINCT content_id "+
+			"FROM ftarticlesdb.content_list_cdc "+
+			"WHERE list_id=$1 AND entry_timestamp>=$2 AND entry_timestamp<=$3) as l "+
 			"JOIN ftarticlesdb.articles_v2_cdc ON l.content_id = articles_v2_cdc.article_uuid "+
-			"JOIN ftarticlesdb.annotations_cdc ON annotations_cdc.article_uuid = articles_v2_cdc.article_uuid;", tc.ListUUID, tc.Start, tc.Stop)
+			"JOIN ftarticlesdb.annotations_cdc ON annotations_cdc.article_uuid = articles_v2_cdc.article_uuid "+
+			"GROUP BY annotations_cdc.id, annotations_cdc.pref_label, annotations_cdc.type "+
+			"ORDER BY n DESC",
+		tc.ListUUID, tc.Start, tc.Stop)
 	if err != nil {
 		log.WithError(err).Error("Error in getting data")
 	}
 	defer rows.Close()
 
-	tc.Concepts = make(map[string]*Concept)
+	tc.Concepts = make(map[string][]*Concept)
 
 	for rows.Next() {
+		var n int
 		var conceptUUID string
 		var conceptPrefLabel string
 		var conceptType string
-		var entryTime time.Time
-		var exitTime time.Time
-		if err := rows.Scan(&conceptUUID, &conceptPrefLabel, &conceptType, &entryTime, &exitTime); err != nil {
+		if err := rows.Scan(&n, &conceptUUID, &conceptPrefLabel, &conceptType); err != nil {
 			log.WithError(err).Error()
 		}
-		log.WithField("conceptUUID", conceptUUID).
+		log.WithField("n", n).
+			WithField("conceptUUID", conceptUUID).
 			WithField("conceptPrefLabel", conceptPrefLabel).
-			WithField("entry", entryTime).
-			WithField("exit", exitTime).
+			WithField("conceptType", conceptType).
 			Info()
 
-		tc.addConceptEntry(conceptUUID, conceptPrefLabel, conceptType, entryTime, exitTime)
+		tc.addConceptEntry(conceptUUID, conceptPrefLabel, conceptType, n)
 	}
 	if err := rows.Err(); err != nil {
 		log.WithError(err).Error()
 	}
 }
 
-func (tc *TopConcepts) addConceptEntry(conceptUUID string, conceptPrefLabel string, conceptType string, entryTime time.Time, exitTime time.Time) {
-	if exitTime == time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC) {
-		exitTime = tc.Stop
+func (tc *TopConcepts) addConceptEntry(conceptUUID string, conceptPrefLabel string, conceptType string, n int) {
+	//global
+	c := &Concept{
+		PrefLabel: conceptPrefLabel,
+		Total:     n,
 	}
-	concept, found := tc.Concepts[conceptUUID]
-	if !found {
-		concept = &Concept{
-			PrefLabel: conceptPrefLabel,
-			TimeLine:  make(map[time.Time]int),
-		}
-		tc.Concepts[conceptUUID] = concept
-	}
-	timeStamp := tc.Start
 
-	for timeStamp.Before(tc.Stop) {
-
-		_, found := concept.TimeLine[timeStamp]
+	if conceptType != "SUBJECT" && conceptType != "GENRE" {
+		conceptList, found := tc.Concepts["global"]
 		if !found {
-			concept.TimeLine[timeStamp] = 0
-		}
+			conceptList = []*Concept{}
 
-		if timeStamp.After(entryTime) && timeStamp.Before(exitTime) {
-			concept.TimeLine[timeStamp] = concept.TimeLine[timeStamp] + 1
 		}
-		timeStamp = timeStamp.Add(1 * time.Minute)
+		conceptList = append(conceptList, c)
+		tc.Concepts["global"] = conceptList
 	}
 
-	concept.Total++
+	conceptList, found := tc.Concepts[conceptType]
+	if !found {
+		conceptList = []*Concept{}
+
+	}
+	conceptList = append(conceptList, c)
+	tc.Concepts[conceptType] = conceptList
 }
 
-func (tc *TopConcepts) GetTimeLine() *DataTable {
+func (tc *TopConcepts) GetDataTable(conceptType string, limit int) *DataTable {
 	dt := newDataTable()
 	dt.addCol("Concept", "Concept", "", "string")
 	dt.addCol("Appearances", "Appearances", "", "number")
 
-	for _, c := range tc.top(10) {
-		dt.addRow([]Value{{V: c.PrefLabel}, {V: c.Total}})
+	cList := tc.Concepts[conceptType]
+
+	if limit != -1 {
+		for i := 0; i < limit && i < len(cList); i++ {
+			dt.addRow([]Value{{V: cList[i].PrefLabel}, {V: cList[i].Total}})
+		}
+	} else {
+		for _, c := range tc.Concepts[conceptType] {
+			dt.addRow([]Value{{V: c.PrefLabel}, {V: c.Total}})
+		}
 	}
 	return dt
 }
-
-func (tc *TopConcepts) top(size int) []*Concept {
-	r := []*Concept{}
-	for _, c := range tc.Concepts {
-		r = append(r, c)
-	}
-	sort.Sort(ByTotal(r))
-	return r[:size]
-}
-
-type ByTotal []*Concept
-
-func (a ByTotal) Len() int           { return len(a) }
-func (a ByTotal) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByTotal) Less(i, j int) bool { return a[i].Total > a[j].Total }
 
 type DataTable struct {
 	Cols []Column `json:"cols"`

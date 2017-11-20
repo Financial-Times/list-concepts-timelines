@@ -21,6 +21,9 @@ func (c *topConceptCache) get(start time.Time, stop time.Time, listUUID string) 
 		return nil, found
 	}
 	tc, found := m.(*sync.Map).Load(listUUID)
+	if !found {
+		return nil, found
+	}
 	return tc.(*TopConcepts), found
 }
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/Financial-Times/list-concepts-timelines/stats"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"time"
 )
 
@@ -47,7 +48,24 @@ func (h *TopConceptsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		listUUID = "520ddb76-e43d-11e4-9e89-00144feab7de"
 	}
 
+	conceptType := ""
+	if len(values["conceptType"]) > 0 {
+		conceptType = values["conceptType"][0]
+	}
+	if conceptType == "" {
+		conceptType = "global"
+	}
 	topConcepts := stats.GetTopConcepts(start, stop, listUUID)
 
-	json.NewEncoder(w).Encode(topConcepts.GetTimeLine())
+	limitString := ""
+	if len(values["limit"]) > 0 {
+		limitString = values["limit"][0]
+	}
+
+	limit, err := strconv.Atoi(limitString)
+	if err != nil {
+		limit = -1
+	}
+
+	json.NewEncoder(w).Encode(topConcepts.GetDataTable(conceptType, limit))
 }
