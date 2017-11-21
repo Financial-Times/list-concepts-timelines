@@ -55,12 +55,16 @@
         function drawCharts(start, end) {
 
             var listUUID = $('#sel1').val();
-            google.charts.load('current', {packages: ['corechart', 'bar','geochart'],'mapsApiKey': ''});
+            var contentType = $('#sel2').val();
+
+            // Note: you will need to get a mapsApiKey for your project.
+            // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+            google.charts.load('current', {packages: ['corechart', 'bar','geochart'],'mapsApiKey': 'PUT API KEY HERE'});
 
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -80,7 +84,7 @@
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&conceptType=LOCATION&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&conceptType=LOCATION&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -101,7 +105,7 @@
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=ORGANISATION&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=ORGANISATION&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -121,7 +125,7 @@
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=PERSON&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=PERSON&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -140,7 +144,7 @@
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=TOPIC&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=TOPIC&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -159,7 +163,7 @@
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&conceptType=BRAND&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&conceptType=BRAND&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -179,7 +183,7 @@
             google.charts.setOnLoadCallback(function () {
 
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=GENRE&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=GENRE&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -198,7 +202,7 @@
 
             google.charts.setOnLoadCallback(function () {
                 $.ajax({
-                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=SUBJECT&listUUID="+listUUID,
+                    url: "../topConcepts?start="+start.format('YYYY-MM-DD')+"&stop="+end.format('YYYY-MM-DD')+"&limit=10&conceptType=SUBJECT&listUUID="+listUUID+"&contentType="+contentType,
                     dataType: "json",
                     async: true
                 }).done(function(respdata){
@@ -218,8 +222,6 @@
     </script>
     <script type="text/javascript">
     </script>
-</head>
-
 </head>
 
 
@@ -267,6 +269,17 @@
               <option value="5bfe91e8-2997-11e6-8ba3-cdd781d02d89">	Work Careers Top Stories</option>
               <option value="bc81b5bc-1995-11e5-a130-2e7db721f996">	Opinion UK homepage</option>
               <option value="c9cdfd1c-1f5f-11e7-a454-ab04428977f9">	Special Reports Top Stories</option>
+          </select>
+      </div>
+
+      <div class="form-group">
+          <label for="sel2">Select a type of content:</label>
+          <select class="form-control" id="sel2">
+              <option value="All">All</option>
+              <option value="Article">Article</option>
+              <option value="Content">Content</option>
+              <option value="ContentPackage">Content Package</option>
+              <option value="Video">Video</option>
           </select>
       </div>
 

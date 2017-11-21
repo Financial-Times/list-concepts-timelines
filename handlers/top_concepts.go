@@ -55,7 +55,6 @@ func (h *TopConceptsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if conceptType == "" {
 		conceptType = "concepts"
 	}
-	topConcepts := stats.GetTopConcepts(start, stop, listUUID)
 
 	limitString := ""
 	if len(values["limit"]) > 0 {
@@ -67,5 +66,15 @@ func (h *TopConceptsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		limit = -1
 	}
 
-	json.NewEncoder(w).Encode(topConcepts.GetDataTable(conceptType, limit))
+	contentType := ""
+	if len(values["contentType"]) > 0 {
+		contentType = values["contentType"][0]
+	}
+	if contentType == "" {
+		contentType = "All"
+	}
+
+	topConcepts := stats.GetTopConcepts(start, stop, listUUID)
+
+	json.NewEncoder(w).Encode(topConcepts.GetDataTable(conceptType, limit, contentType))
 }
